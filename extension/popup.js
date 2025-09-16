@@ -146,42 +146,47 @@ function activatePickerMode(type) {
     } else {
         console.error("Background port not established.");
         showMessage('error', '無法與背景服務通訊，請重新載入擴充功能。');
-        // Fallback to old method if port not established, though it might fail
         if (backgroundPort) {
             backgroundPort.postMessage({ action: "enablePopup" });
         }
     }
 
-    // Send message to background script, which forwards to content script
     chrome.tabs.query({ active: true, currentWindow: true }, async (tabs) => {
         if (tabs[0] && tabs[0].id) {
-            // Add this check
-            const marketplaceUrlPattern = /^https?:\/\/www\.facebook\.com\/marketplace\/item\//;
-            if (!marketplaceUrlPattern.test(tabs[0].url)) {
-                showMessage('error', '元素選擇器模式僅適用於 Facebook Marketplace 商品頁面。');
+            const tabId = tabs[0].id;
+
+            try {
+                // Dynamically inject content_script.js
+                await chrome.scripting.executeScript({
+                    target: { tabId: tabId },
+                    files: ['content_script.js']
+                });
+                console.log('content_script.js injected successfully.');
+
+                // Now send message to the injected script
+                const response = await chrome.tabs.sendMessage(tabId, { action: "activatePickerMode", type: type });
+
+                if (chrome.runtime.lastError) {
+                    console.error("Error sending message to content script (activatePickerMode):", chrome.runtime.lastError.message);
+                    showMessage('error', `無法啟動選擇模式: ${chrome.runtime.lastError.message}`);
+                    if (backgroundPort) {
+                        backgroundPort.postMessage({ action: "enablePopup" });
+                    }
+                    return;
+                }
+                console.log('Picker activation response from content script:', response);
+
+            } catch (error) {
+                console.error("Error injecting content script or sending message:", error);
+                showMessage('error', `無法啟動選擇模式: ${error.message}. 請確保您在一個可訪問的網頁上。`);
                 if (backgroundPort) {
                     backgroundPort.postMessage({ action: "enablePopup" });
                 }
-                return;
             }
-
-            // Use await for sendMessage to handle response directly
-            const response = await chrome.tabs.sendMessage(tabs[0].id, { action: "activatePickerMode", type: type });
-
-            if (chrome.runtime.lastError) {
-                console.error("Error sending message to content script (activatePickerMode):", chrome.runtime.lastError.message);
-                showMessage('error', `無法啟動選擇模式: ${chrome.runtime.lastError.message}`);
-                // Re-enable popup if error
-                if (backgroundPort) {
-                    backgroundPort.postMessage({ action: "enablePopup" });
-                }
-                return;
-            }
-            console.log('Picker activation response from background:', response);
         } else {
             showMessage('error', '沒有活動中的分頁來啟動選擇模式。');
             if (backgroundPort) {
-                backgroundPort.postMessage({ action: "enablePopup" }); // Re-enable popup if no active tab
+                backgroundPort.postMessage({ action: "enablePopup" });
             }
         }
     });

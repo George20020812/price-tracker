@@ -29,7 +29,7 @@
 
 1.  **複製專案**
     ```bash
-    git clone <your-repository-url>
+    git clone https://github.com/George20020812/price-tracker.git
     cd fb-price-tracker/backend
     ```
 
@@ -39,11 +39,7 @@
         python -m venv venv
         .\venv\Scripts\activate
         ```
-    -   macOS/Linux:
-        ```bash
-        python3 -m venv venv
-        source venv/bin/activate
-        ```
+    
 
 3.  **安裝依賴套件**
     > 建議先建立 `requirements.txt` 檔案 (`pip freeze > requirements.txt`)
