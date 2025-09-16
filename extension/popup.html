@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>FB Price Tracker</title>
+  <link rel="stylesheet" href="popup.css">
+  <!-- Chart.js CDN for price visualization -->
+  <script src="chart.min.js"></script>
+</head>
+<body>
+  <div id="app-container">
+    <!-- Header with navigation -->
+    <div id="header">
+      <button id="backBtn" class="nav-btn hidden">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-left" viewBox="0 0 16 16">
+          <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z"/>
+        </svg>
+      </button>
+      <h1 id="viewTitle">FB Price Tracker</h1>
+      <button id="viewListBtn" class="nav-btn">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-list-ul" viewBox="0 0 16 16">
+          <path fill-rule="evenodd" d="M5 11.5a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5zm-3 1a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm0 4a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm0 4a1 1 0 1 0 0-2 1 1 0 0 0 0 2z"/>
+        </svg>
+      </button>
+      <button id="addBtn" class="nav-btn hidden">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus-circle" viewBox="0 0 16 16">
+          <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+          <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- View for adding new items -->
+    <div id="view-add" class="view">
+      <div id="productInfo">
+        <p><strong>貼文連結:</strong> <span id="postUrlDisplay">讀取中...</span></p>
+        <hr style="margin: 15px 0; border-color: #eee;">
+        <h3>添加商品到列表</h3>
+        <div class="item-input-group">
+          <input type="text" id="newItemNameInput" placeholder="商品名稱">
+          <input type="number" id="newItemPriceInput" placeholder="價格" step="0.01">
+          <button id="addToListBtn" class="secondary-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus-circle" viewBox="0 0 16 16">
+              <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+              <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
+            </svg>
+            添加
+          </button>
+        </div>
+        <ul id="itemsToTrackList" class="items-to-track-list">
+          <!-- Items to be tracked will be listed here -->
+        </ul>
+      </div>
+      <button id="trackBtn" class="primary-btn">追蹤此貼文中的所有商品</button>
+
+      <hr style="margin: 20px 0; border-color: #eee;">
+      <h3>手動擷取元素 (Marketplace 專用)</h3>
+      <div class="selector-picker-section">
+        <label for="productNameSelector">商品名稱選擇器:</label>
+        <input type="text" id="productNameSelector" readonly>
+        <div class="btn-group">
+          <button id="selectNameBtn" class="selector-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-cursor" viewBox="0 0 16 16">
+              <path d="M14.082 2.182a.5.5 0 0 1 .103.557L8.528 15.467a.5.5 0 0 1-.917-.007L5.59 8.232.082 5.119a.5.5 0 0 1 .006-.916l12.728-6.217a.5.5 0 0 1 .556.103zM2.25 5.917l5.269 2.71L12.75 3.083 2.25 5.917z"/>
+            </svg>
+            選擇名稱
+          </button>
+          <button id="clearNameSelectorBtn" class="secondary-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x-circle" viewBox="0 0 16 16">
+              <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+              <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/>
+            </svg>
+            清除
+          </button>
+        </div>
+
+        <label for="productPriceSelector">商品價格選擇器:</label>
+        <input type="text" id="productPriceSelector" readonly>
+        <div class="btn-group">
+          <button id="selectPriceBtn" class="selector-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-cursor" viewBox="0 0 16 16">
+              <path d="M14.082 2.182a.5.5 0 0 1 .103.557L8.528 15.467a.5.5 0 0 1-.917-.007L5.59 8.232.082 5.119a.5.5 0 0 1 .006-.916l12.728-6.217a.5.5 0 0 1 .556.103zM2.25 5.917l5.269 2.71L12.75 3.083 2.25 5.917z"/>
+            </svg>
+            選擇價格
+          </button>
+          <button id="clearPriceSelectorBtn" class="secondary-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x-circle" viewBox="0 0 16 16">
+              <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+              <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/>
+            </svg>
+            清除
+          </button>
+        </div>
+        <button id="loadSelectedBtn" class="primary-btn" style="margin-top: 15px;">載入選取商品資訊</button>
+        <button id="trackSelectedBtn" class="primary-btn" style="margin-top: 15px;">追蹤選取商品</button>
+      </div>
+    </div>
+
+    <!-- View for listing tracked items -->
+    <div id="view-list" class="view hidden">
+      <ul id="trackedItemsList">
+        <!-- Items will be loaded here by JavaScript -->
+        <li class="loading-message">載入中...</li>
+      </ul>
+    </div>
+
+    <!-- View for item details and chart -->
+    <div id="view-detail" class="view hidden">
+      <h2 id="detailItemName"></h2>
+      <p><strong>當前價格:</strong> <span id="detailCurrentPrice"></span></p>
+      <p><strong>原始連結:</strong> <a id="detailPostUrl" href="#" target="_blank">點擊查看</a></p>
+      <div class="chart-container">
+        <canvas id="priceChart"></canvas>
+      </div>
+      <button id="deleteItemBtn" class="danger-btn">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
+          <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/>
+          <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H9.5a1 1 0 0 1 1 1v1H14.5zm-9.5 0h7V2H5v1z"/>
+        </svg>
+        刪除此商品
+      </button>
+    </div>
+
+    <!-- Message display area -->
+    <div id="messageArea" class="hidden"></div>
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>
